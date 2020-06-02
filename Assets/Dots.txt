@@ -1,0 +1,101 @@
+==========================================================
+Data
+==========================================================
+[GenerateAuthoringComponent]
+public struct PrefabEntityComponent : IComponentData  (пример 1_3)
+{
+    public Entity prefabEntity;
+}
+
+
+==========================================================
+System (classes)
+==========================================================
+ComponentSystemBase
+|                      |                      |
+SystemBase       ComponentSystem      JobComponentSystem
+
+
+
+---------------------------------------------------------
+[RequiresEntityConversion]  -  допустим только для class
+[DisableAutoCreation]       -  если установлен, система запукается из кода (не на автомате)
+[AlwaysSynchronizeSystem]
+---------------------------------------------------------       
+[DisableAutoCreation]
+public class MyClassSystem : ComponentSystem
+{
+   protected virtual void OnCreate()
+   {
+      // удобно!
+      RequireSingletonForUpdate<SampleClass>();   <- не выполнять Update, пока не загрузится синглтон SampleClass
+   }
+   public abstract void Update()
+   {
+      var sampleClass = GetSingleton<SampleClass>()
+   }
+}
+--------------------------------------------------------
+public class MyClassSystem : SystemBase
+{
+   OnUpdate();
+}
+--------------------------------------------------------
+[AlwaysSynchronizeSystem]
+public class MyClassSystem : JobComponentSystem
+{
+   JobHandle OnUpdate(JobHandle inputDeps);
+}
+==========================================================
+System (interfaces). Интерфейсов IJob... очень много, большая часть из которых не рекомендуется
+==========================================================
+public interface IJobChunk  (пример 0_3)
+{
+     void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex);
+}
+public interface IJob       (пример 0_0)
+{
+     void Execute();
+}
+public interface IJobParallelFor
+{
+     void Execute(int index);
+}
+public interface IJobParallelForTransform
+{
+     void Execute(int index, TransformAccess transform);
+}
+
+Эти интерфесы наследуются структурами для последующего выполнения задач
+[BurstCompile]
+public struct MyStructJob : IJob
+{
+   public void Execute()
+   {... }
+}
+
+==============================================================
+Физика
+==============================================================
+BeginSimulationEntityCommandBufferSystem
+...
+...
+SyncPoint (точка синхронизации)
+StepPhysicWorld
+...
+EndFramePhysicWorld
+...
+(наша физика тут)
+...
+EndSimulationEntityCommandBufferSystem
+
+Три правила: 
+1. Чтобы наша система физики не пересекалась с физикой Dots, устанавливаются аттрибуты
+[UpdateAfter(typeof(StepPhysicWorld))]
+[UpdateAfter(typeof(EndFramePhysicSystem))]
+
+2. зависимость от BuildPhysicWorld
+
+3. перед физическими системами создать точку синхронизации
+
+
