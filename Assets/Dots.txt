@@ -1,7 +1,7 @@
 ==========================================================
 Data
 ==========================================================
-[GenerateAuthoringComponent]
+[GenerateAuthoringComponent]    -  скрипт можно вешать на объект
 public struct PrefabEntityComponent : IComponentData  (пример 1_3)
 {
     public Entity prefabEntity;
